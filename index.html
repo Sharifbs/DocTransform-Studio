@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="bn" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocTransform Studio - Ultimate Web PDF & Image Suite</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Hind Siliguri', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Third Party CDN Libraries -->
+    <!-- PDF.js for rendering PDF pages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <!-- pdf-lib for PDF manipulation (Merge, Edit, Rotate, Draw Overlay) -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <!-- jsPDF for Image to PDF creation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- SortableJS for smooth Drag and Drop thumbnail reordering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+    <!-- JSZip & FileSaver for zip downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <!-- Tesseract.js for Bengali & English OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', 'Hind Siliguri', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* Drag over highlighting */
+        .drop-zone-active {
+            border-color: #2563eb !important;
+            background-color: #eff6ff !important;
+            transform: scale(1.005);
+        }
+
+        /* Sortable ghost styling */
+        .sortable-ghost {
+            opacity: 0.4;
+            border: 2px dashed #2563eb !important;
+        }
+
+        .sortable-drag {
+            cursor: grabbing;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Canvas Pen Cursor */
+        .draw-cursor {
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body class="flex flex-col text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="glass-nav sticky top-0 z-40 shadow-sm transition-all duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-lg leading-tight tracking-tight">DocTransform Studio</h1>
+                    <p class="text-[11px] text-slate-500 font-medium">Ultra-Fast Client-Side PDF & Image Workspace</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 shadow-sm">
+                    <i class="fa-solid fa-shield-halved text-emerald-500"></i> 100% Offline & Private
+                </span>
+                <a href="https://github.com" target="_blank" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors text-sm" title="GitHub Project">
+                    <i class="fa-brands fa-github text-lg"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Layout -->
+    <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 flex-grow flex flex-col gap-6">
+
+        <!-- Suite Action Navigation Tabs -->
+        <nav class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <button id="tab-img2pdf" onclick="switchTab('img2pdf')" 
+                class="tab-btn active-tab flex items-center gap-3 p-3.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all shadow-sm border border-blue-500 bg-blue-50 text-blue-600">
+                <div class="w-9 h-9 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-images"></i>
+                </div>
+                <div class="text-left">
+                    <div class="font-bold">IMAGE TO PDF</div>
+                    <div class="text-[10px] font-normal opacity-80">Drag & Drop Auto-Sort</div>
+                </div>
+            </button>
+
+            <button id="tab-pdf2img" onclick="switchTab('pdf2img')" 
+                class="tab-btn flex items-center gap-3 p-3.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all shadow-sm border border-slate-200 bg-white hover:bg-slate-50 text-slate-600">
+                <div class="w-9 h-9 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </div>
+                <div class="text-left">
+                    <div class="font-bold">PDF TO IMAGE</div>
+                    <div class="text-[10px] font-normal text-slate-400">Extract PNG & Zip</div>
+                </div>
+            </button>
+
+            <button id="tab-pdfeditor" onclick="switchTab('pdfeditor')" 
+                class="tab-btn flex items-center gap-3 p-3.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all shadow-sm border border-slate-200 bg-white hover:bg-slate-50 text-slate-600">
+                <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-pen-ruler"></i>
+                </div>
+                <div class="text-left">
+                    <div class="font-bold">PDF EDIT & MERGE</div>
+                    <div class="text-[10px] font-normal text-slate-400">Pen Draw, Merge & Reorder</div>
+                </div>
+            </button>
+
+            <button id="tab-img2text" onclick="switchTab('img2text')" 
+                class="tab-btn flex items-center gap-3 p-3.5 rounded-2xl font-semibold text-xs sm:text-sm transition-all shadow-sm border border-slate-200 bg-white hover:bg-slate-50 text-slate-600">
+                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-font"></i>
+                </div>
+                <div class="text-left">
+                    <div class="font-bold">IMAGE TO TEXT</div>
+                    <div class="text-[10px] font-normal text-slate-400">Bengali & English OCR</div>
+                </div>
+            </button>
+        </nav>
+
+        <!-- Dynamic Universal Dropzone Container -->
+        <div id="drop-zone" class="glass-card relative border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-3xl p-8 text-center transition-all duration-200 cursor-pointer shadow-lg hover:shadow-xl group">
+            <input type="file" id="file-input" class="hidden" multiple />
+            
+            <div class="flex flex-col items-center justify-center space-y-3 pointer-events-none">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-inner">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div>
+                    <p class="text-base font-bold text-slate-800 mb-1" id="upload-title">ছবি বা পিডিএফ ফাইল ড্র্যাগ করুন অথবা সিলেক্ট করুন</p>
+                    <p class="text-xs text-slate-500 font-medium" id="upload-subtitle">সমর্থিত ফাইল: PNG, JPG, JPEG, WEBP, PDF</p>
+                </div>
+                <button type="button" class="mt-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs rounded-xl shadow-lg shadow-blue-500/25 transition-all">
+                    ফাইল সিলেক্ট করুন
+                </button>
+            </div>
+        </div>
+
+        <!-- Global Toast Container -->
+        <div id="toast" class="hidden p-4 rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-300 shadow-md flex items-center gap-3"></div>
+
+        <!-- Progress Progressbar Container -->
+        <div id="progress-container" class="hidden glass-card p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <span id="progress-status" class="text-xs font-bold text-slate-700">ফাইল প্রসেসিং হচ্ছে...</span>
+                <span id="progress-percent" class="text-xs font-extrabold text-blue-600">0%</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                <div id="progress-bar" class="bg-gradient-to-r from-blue-600 to-indigo-600 h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Dynamic Studio Tool Panels -->
+        <div id="output-section" class="space-y-6">
+
+            <!-- TAB 1: IMAGE TO PDF PANEL -->
+            <div id="panel-img2pdf" class="tool-panel">
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">ইমেজ টু PDF তালিকা</h3>
+                            <p class="text-xs text-slate-500">ছবিগুলো মাউস দিয়ে ড্র্যাগ (Drag & Drop) করে সাজান অথবা সর্ট বাটন ব্যবহার করুন</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Natural Ascending Sort Button -->
+                            <button onclick="sortUploadedImages('asc')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-arrow-down-1-9 text-blue-600"></i> Ascending (১-৯)
+                            </button>
+                            <!-- Natural Descending Sort Button -->
+                            <button onclick="sortUploadedImages('desc')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-arrow-down-9-1 text-purple-600"></i> Descending (৯-১)
+                            </button>
+                            <!-- Clear All Button -->
+                            <button onclick="clearImg2PdfList()" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-trash-can"></i> মুছুন
+                            </button>
+                            <!-- Generate PDF Button -->
+                            <button id="btn-generate-pdf" onclick="generatePdfFromImages()" class="hidden px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/25 transition-all">
+                                <i class="fa-solid fa-file-pdf"></i> PDF ডাউনলোড করুন
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Draggable Sortable Grid Container -->
+                    <div id="img2pdf-preview-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 min-h-[120px] p-2 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                        <!-- Preview Cards Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PDF TO IMAGE PANEL -->
+            <div id="panel-pdf2img" class="tool-panel hidden">
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">PDF থেকে বের করা Image সমুহ</h3>
+                            <p class="text-xs text-slate-500" id="pdf-page-count">০টি পৃষ্ঠা প্রস্তুত আছে</p>
+                        </div>
+                        <div>
+                            <button id="btn-download-all-img" onclick="downloadAllImagesZip()" class="hidden px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-md transition-all">
+                                <i class="fa-solid fa-file-zipper text-yellow-400"></i> ZIP ডাউনলোড (সব ছবি)
+                            </button>
+                        </div>
+                    </div>
+                    <div id="pdf-images-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- Extracted PNG cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: PDF EDIT, MERGE & ANNOTATE PANEL -->
+            <div id="panel-pdfeditor" class="tool-panel hidden">
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">PDF Edit, Merge & Page Organizer</h3>
+                            <p class="text-xs text-slate-500">পেজ বাদ দিতে (Delete), ঘুরাতে (Rotate), কলম দিয়ে লিখতে/স্বাক্ষর দিতে ক্লিক করুন</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button id="btn-save-edited-pdf" onclick="saveEditedPdfDocument()" class="hidden px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-purple-500/25 transition-all">
+                                <i class="fa-solid fa-download"></i> এডিটেড PDF সেভ করুন
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="pdf-editor-pages-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 min-h-[150px] p-2 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                        <!-- Rendered Editable Canvas Cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: IMAGE TO TEXT (OCR) PANEL -->
+            <div id="panel-img2text" class="tool-panel hidden">
+                <div class="glass-card p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-3">
+                        <div class="flex items-center gap-3">
+                            <label for="ocr-lang" class="text-xs font-bold text-slate-700">ভাষা সিলেক্ট করুন:</label>
+                            <select id="ocr-lang" class="text-xs border border-slate-300 rounded-xl p-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold shadow-sm">
+                                <option value="ben+eng" selected>বাংলা + English (Autodetect)</option>
+                                <option value="ben">বাংলা (Bengali)</option>
+                                <option value="eng">English</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="copyOcrText()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-copy text-blue-600"></i> কপি টেক্সট
+                            </button>
+                            <button onclick="downloadOcrText()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all">
+                                <i class="fa-solid fa-file-arrow-down"></i> TXT ডাউনলোড
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="border border-slate-200 rounded-xl p-3 bg-slate-50 flex items-center justify-center min-h-[300px]">
+                            <img id="ocr-image-preview" src="" alt="OCR Target" class="max-h-[380px] object-contain rounded-lg hidden shadow">
+                            <p id="ocr-placeholder" class="text-xs font-medium text-slate-400">ছবি আপলোড করলে এখানে প্রিভিউ আসবে</p>
+                        </div>
+                        <div>
+                            <textarea id="ocr-result-text" placeholder="ছবি থেকে নিষ্কাশিত লেখা (Extracted Text) এখানে আসবে..." 
+                                class="w-full h-[320px] p-4 text-xs sm:text-sm font-mono border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-slate-800 resize-none shadow-sm"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Canvas Drawing / Annotation Pen Modal Window -->
+    <div id="annotation-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-sm shadow">
+                        <i class="fa-solid fa-pen-nib"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm sm:text-base">PDF পৃষ্ঠা কলম দিয়ে আঁকুন / সাইন করুন</h3>
+                        <p class="text-[11px] text-slate-500">Draw, mark or place your signature directly</p>
+                    </div>
+                </div>
+                <button onclick="closeAnnotationModal()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Toolbar Controls -->
+            <div class="px-6 py-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-semibold">
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-1.5 text-slate-700">
+                        <i class="fa-solid fa-palette text-purple-600"></i> কালার:
+                        <input type="color" id="pen-color" value="#dc2626" class="w-7 h-7 rounded border border-slate-300 cursor-pointer">
+                    </label>
+
+                    <label class="flex items-center gap-1.5 text-slate-700">
+                        <i class="fa-solid fa-circle-dot"></i> সাইজ:
+                        <input type="range" id="pen-size" min="1" max="15" value="3" class="w-20 accent-purple-600">
+                    </label>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="clearAnnotationCanvas()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-eraser"></i> ক্লিয়ার ড্রয়িং
+                    </button>
+                    <button onclick="applyAnnotationToPage()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-1.5 shadow transition-colors">
+                        <i class="fa-solid fa-check"></i> সেভ করুন
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="p-4 bg-slate-100 flex-grow overflow-auto flex items-center justify-center">
+                <div class="relative shadow-xl rounded-lg overflow-hidden bg-white">
+                    <canvas id="annotation-canvas" class="draw-cursor block"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Zoom Preview Modal -->
+    <div id="zoom-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4" onclick="closeZoomModal()">
+        <img id="zoom-image" src="" alt="Full Zoom" class="max-w-full max-h-full rounded-xl object-contain shadow-2xl">
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs font-semibold text-slate-500">
+            DocTransform Studio &copy; 2026 | Built for GitHub Pages & Vercel
+        </div>
+    </footer>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // --- GLOBAL APP STATE ---
+        let currentTab = 'img2pdf';
+        
+        // Image to PDF list
+        let img2pdfFiles = []; // [{ id, file, dataUrl, name }]
+        let sortableInstance = null;
+
+        // PDF to Image list
+        let pdf2imgExtracted = [];
+
+        // PDF Editor & Merger list
+        let pdfEditorPages = []; // [{ id, pdfDocIndex, pageIndex, pdfLibBytes, canvasDataUrl, rotation }]
+        let loadedPdfDocs = []; // Stores ArrayBuffers of loaded PDFs
+        let currentAnnotatingPageIndex = null;
+
+        // OCR Image Target
+        let ocrTargetFile = null;
+
+        // Annotation Canvas State
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        const annotCanvas = document.getElementById('annotation-canvas');
+        const annotCtx = annotCanvas.getContext('2d');
+
+        // --- DOM INITIALIZATION ---
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        window.onload = () => {
+            initSortable();
+            setupDragAndDrop();
+            setupAnnotationCanvasListeners();
+            switchTab('img2pdf');
+        };
+
+        // Initialize SortableJS for Image to PDF Grid Reordering
+        function initSortable() {
+            const gridEl = document.getElementById('img2pdf-preview-grid');
+            sortableInstance = new Sortable(gridEl, {
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                onEnd: function () {
+                    // Sync internal JS array with new DOM order
+                    const newOrderIds = Array.from(gridEl.children).map(child => child.dataset.id);
+                    img2pdfFiles.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+                }
+            });
+        }
+
+        // Setup Drag & Drop Handlers
+        function setupDragAndDrop() {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+                dropZone.addEventListener(evt, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropZone.addEventListener(evt, () => dropZone.classList.add('drop-zone-active'));
+            });
+
+            ['dragleave', 'drop'].forEach(evt => {
+                dropZone.addEventListener(evt, () => dropZone.classList.remove('drop-zone-active'));
+            });
+
+            dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+        }
+
+        // Switch Active Tool Tabs
+        function switchTab(tab) {
+            currentTab = tab;
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active-tab', 'border-blue-500', 'bg-blue-50', 'text-blue-600');
+                btn.classList.add('border-slate-200', 'bg-white', 'text-slate-600');
+            });
+
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.classList.add('active-tab', 'border-blue-500', 'bg-blue-50', 'text-blue-600');
+
+            document.querySelectorAll('.tool-panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById(`panel-${tab}`).classList.remove('hidden');
+
+            const title = document.getElementById('upload-title');
+            const sub = document.getElementById('upload-subtitle');
+
+            if (tab === 'img2pdf') {
+                title.textContent = "ছবি ফাইল ড্র্যাগ করুন অথবা সিলেক্ট করুন";
+                sub.textContent = "একাধিক ছবি যুক্ত করে একটি PDF পেজ তৈরি করুন (ন্যাচারাল সর্টিং সুবিধা সহ)";
+                fileInput.accept = "image/*";
+                fileInput.multiple = true;
+            } else if (tab === 'pdf2img') {
+                title.textContent = "PDF ফাইল সিলেক্ট করুন";
+                sub.textContent = "পিডিএফ থেকে সব পেজ হাই-রেজুলেশন PNG ছবি আকারে এক্সট্র্যাক্ট করুন";
+                fileInput.accept = ".pdf";
+                fileInput.multiple = false;
+            } else if (tab === 'pdfeditor') {
+                title.textContent = "এক বা একাধিক PDF ড্র্যাগ করুন";
+                sub.textContent = "PDF মার্চ, পেজ সাজানো, পেজ ডিলিট, রোটেট এবং পেন দিয়ে সাইন/অ্যাঙ্কোর করুন";
+                fileInput.accept = ".pdf";
+                fileInput.multiple = true;
+            } else if (tab === 'img2text') {
+                title.textContent = "বাংলা/ইংরেজি লেখার ছবি ড্র্যাগ করুন";
+                sub.textContent = "OCR প্রযুক্তির মাধ্যমে ছবি থেকে সরাসরি টেক্সট বের করুন";
+                fileInput.accept = "image/*";
+                fileInput.multiple = false;
+            }
+        }
+
+        // Main File Router
+        async function handleFiles(files) {
+            if (!files || files.length === 0) return;
+
+            if (currentTab === 'img2pdf') {
+                await processImagesForPdf(Array.from(files));
+            } else if (currentTab === 'pdf2img') {
+                if (files[0].type === 'application/pdf') {
+                    await processPdfToImages(files[0]);
+                } else {
+                    showToast('অনুগ্রহ করে সঠিক PDF ফাইল আপলোড করুন', 'error');
+                }
+            } else if (currentTab === 'pdfeditor') {
+                const pdfFiles = Array.from(files).filter(f => f.type === 'application/pdf');
+                if (pdfFiles.length > 0) {
+                    await processPdfEditorFiles(pdfFiles);
+                } else {
+                    showToast('অনুগ্রহ করে এক বা একাধিক PDF ফাইল সিলেক্ট করুন', 'error');
+                }
+            } else if (currentTab === 'img2text') {
+                if (files[0].type.startsWith('image/')) {
+                    await processImageToText(files[0]);
+                } else {
+                    showToast('অনুগ্রহ করে একটি ছবি ফাইল আপলোড করুন', 'error');
+                }
+            }
+        }
+
+        // ==========================================
+        // 1. IMAGE TO PDF & NATURAL SORTING LOGIC
+        // ==========================================
+        async function processImagesForPdf(files) {
+            showProgress(true, 'ছবিগুলো প্রসেসিং করা হচ্ছে...', 20);
+
+            for (let file of files) {
+                if (!file.type.startsWith('image/')) continue;
+                const dataUrl = await readFileAsDataURL(file);
+                img2pdfFiles.push({
+                    id: 'img_' + Math.random().toString(36).substr(2, 9),
+                    file: file,
+                    dataUrl: dataUrl,
+                    name: file.name
+                });
+            }
+
+            // Natural Ascending Sorting by default
+            sortUploadedImages('asc', false);
+            showProgress(false);
+            showToast('ছবিগুলো সফলভাবে যোগ করা হয়েছে!', 'success');
+        }
+
+        // Natural Sort algorithm (handles page-1, page-2, page-10 smoothly)
+        function sortUploadedImages(direction = 'asc', notify = true) {
+            const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+            img2pdfFiles.sort((a, b) => {
+                return direction === 'asc' 
+                    ? collator.compare(a.name, b.name)
+                    : collator.compare(b.name, a.name);
+            });
+
+            renderImg2PdfGrid();
+            if (notify) showToast(`ছবিগুলো ${direction === 'asc' ? 'Ascending (১-৯)' : 'Descending (৯-১)'} সাজানো হয়েছে`, 'info');
+        }
+
+        function renderImg2PdfGrid() {
+            const grid = document.getElementById('img2pdf-preview-grid');
+            grid.innerHTML = '';
+
+            if (img2pdfFiles.length === 0) {
+                document.getElementById('btn-generate-pdf').classList.add('hidden');
+                grid.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-slate-400 font-medium">কোনো ছবি যুক্ত করা হয়নি</div>`;
+                return;
+            }
+
+            document.getElementById('btn-generate-pdf').classList.remove('hidden');
+
+            img2pdfFiles.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-2 rounded-2xl border border-slate-200 shadow-sm relative group hover:shadow-md transition-all";
+                card.dataset.id = item.id;
+
+                card.innerHTML = `
+                    <div class="h-28 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center relative cursor-grab">
+                        <img src="${item.dataUrl}" class="max-h-full max-w-full object-contain">
+                        <span class="absolute top-1.5 left-1.5 bg-slate-900/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-sm">#${index + 1}</span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between px-1">
+                        <p class="text-[11px] font-semibold text-slate-700 truncate max-w-[100px]">${item.name}</p>
+                        <div class="flex items-center gap-1">
+                            <button onclick="zoomImage('${item.dataUrl}')" class="text-slate-400 hover:text-blue-600 text-xs p-1" title="জুম দেখুন">
+                                <i class="fa-solid fa-magnifying-glass-plus"></i>
+                            </button>
+                            <button onclick="removeImg2PdfItem('${item.id}')" class="text-slate-400 hover:text-red-600 text-xs p-1" title="মুছুন">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function removeImg2PdfItem(id) {
+            img2pdfFiles = img2pdfFiles.filter(item => item.id !== id);
+            renderImg2PdfGrid();
+        }
+
+        function clearImg2PdfList() {
+            img2pdfFiles = [];
+            renderImg2PdfGrid();
+            showToast('তালিকা খালি করা হয়েছে', 'info');
+        }
+
+        async function generatePdfFromImages() {
+            if (img2pdfFiles.length === 0) return;
+            showProgress(true, 'PDF ফাইল জেনারেট হচ্ছে...', 20);
+
+            const { jsPDF } = window.jspdf;
+            let doc = null;
+
+            for (let i = 0; i < img2pdfFiles.length; i++) {
+                const item = img2pdfFiles[i];
+                const pct = Math.round(((i + 1) / img2pdfFiles.length) * 100);
+                showProgress(true, `পেজ প্রসেস করা হচ্ছে (${i + 1}/${img2pdfFiles.length})...`, pct);
+
+                const imgProps = await getImageProperties(item.dataUrl);
+                const pdfWidth = imgProps.width;
+                const pdfHeight = imgProps.height;
+
+                if (i === 0) {
+                    doc = new jsPDF({
+                        orientation: pdfWidth > pdfHeight ? 'l' : 'p',
+                        unit: 'px',
+                        format: [pdfWidth, pdfHeight]
+                    });
+                } else {
+                    doc.addPage([pdfWidth, pdfHeight], pdfWidth > pdfHeight ? 'l' : 'p');
+                }
+
+                doc.addImage(item.dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            }
+
+            doc.save('DocTransform-Combined.pdf');
+            showProgress(false);
+            showToast('PDF ফাইল সফলভাবে প্রস্তুত হয়েছে!', 'success');
+        }
+
+        // ==========================================
+        // 2. PDF TO IMAGE LOGIC
+        // ==========================================
+        async function processPdfToImages(file) {
+            pdf2imgExtracted = [];
+            const grid = document.getElementById('pdf-images-grid');
+            grid.innerHTML = '';
+            showProgress(true, 'PDF পেজ পড়ার চেষ্টা করা হচ্ছে...', 10);
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const totalPages = pdf.numPages;
+
+                document.getElementById('pdf-page-count').textContent = `মোট ${totalPages}টি পেজ এক্সট্র্যাক্ট করা হয়েছে`;
+
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    const pct = Math.round((pageNum / totalPages) * 100);
+                    showProgress(true, `পেজ ${pageNum} ইমেজে রূপান্তর হচ্ছে...`, pct);
+
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 1.8 });
+
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                    const dataUrl = canvas.toDataURL('image/png');
+                    pdf2imgExtracted.push({ pageNum, dataUrl });
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-2";
+                    card.innerHTML = `
+                        <div class="relative bg-slate-100 rounded-xl overflow-hidden h-44 flex items-center justify-center">
+                            <img src="${dataUrl}" class="max-h-full max-w-full object-contain">
+                            <span class="absolute top-2 left-2 bg-slate-900/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">Page ${pageNum}</span>
+                        </div>
+                        <a href="${dataUrl}" download="Page-${pageNum}.png" class="mt-auto py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold rounded-xl text-center transition-colors flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-download"></i> ডাউনলো
+                        </a>
+                    `;
+                    grid.appendChild(card);
+                }
+
+                showProgress(false);
+                document.getElementById('btn-download-all-img').classList.remove('hidden');
+                showToast('সব পেজ সফলভাবে ছবিতে রূপান্তর হয়েছে!', 'success');
+
+            } catch (err) {
+                console.error(err);
+                showProgress(false);
+                showToast('PDF ফাইলটি লোড করতে সমস্যা হয়েছে', 'error');
+            }
+        }
+
+        async function downloadAllImagesZip() {
+            if (pdf2imgExtracted.length === 0) return;
+
+            showProgress(true, 'ZIP ফাইল প্রসেস হচ্ছে...', 50);
+            const zip = new JSZip();
+            const folder = zip.folder("pdf_extracted_images");
+
+            pdf2imgExtracted.forEach(item => {
+                const base64Data = item.dataUrl.replace(/^data:image\/(png|jpg);base64,/, "");
+                folder.file(`Page-${item.pageNum}.png`, base64Data, { base64: true });
+            });
+
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, "DocTransform-Images.zip");
+            showProgress(false);
+            showToast('ZIP ফাইল ডাউনলোডের জন্য রেডি!', 'success');
+        }
+
+        // ==========================================
+        // 3. PDF EDIT, MERGE & ANNOTATION LOGIC
+        // ==========================================
+        async function processPdfEditorFiles(files) {
+            showProgress(true, 'PDF ফাইল প্রসেস করা হচ্ছে...', 20);
+
+            for (let file of files) {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const docIndex = loadedPdfDocs.length;
+                    loadedPdfDocs.push(arrayBuffer);
+
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer.slice(0) }).promise;
+
+                    for (let pNum = 1; pNum <= pdf.numPages; pNum++) {
+                        const page = await pdf.getPage(pNum);
+                        const viewport = page.getViewport({ scale: 1.0 });
+
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                        pdfEditorPages.push({
+                            id: 'pdf_pg_' + Math.random().toString(36).substr(2, 9),
+                            docIndex: docIndex,
+                            pageIndex: pNum - 1,
+                            canvasDataUrl: canvas.toDataURL('image/png'),
+                            rotation: 0,
+                            annotations: [] // array of drawn data URLs overlay
+                        });
+                    }
+                } catch (e) {
+                    console.error("PDF Read Error:", e);
+                }
+            }
+
+            renderPdfEditorPages();
+            showProgress(false);
+            showToast('PDF ফাইল সফলভাবে যুক্ত হয়েছে!', 'success');
+        }
+
+        function renderPdfEditorPages() {
+            const container = document.getElementById('pdf-editor-pages-container');
+            container.innerHTML = '';
+
+            if (pdfEditorPages.length === 0) {
+                document.getElementById('btn-save-edited-pdf').classList.add('hidden');
+                container.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-slate-400 font-medium">কোনো PDF ফাইল সিলেক্ট করা হয়নি</div>`;
+                return;
+            }
+
+            document.getElementById('btn-save-edited-pdf').classList.remove('hidden');
+
+            pdfEditorPages.forEach((pageObj, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-2 relative group hover:shadow-md transition-all";
+
+                card.innerHTML = `
+                    <div class="relative bg-slate-100 rounded-xl overflow-hidden h-44 flex items-center justify-center">
+                        <img src="${pageObj.canvasDataUrl}" class="max-h-full max-w-full object-contain transition-transform duration-200" style="transform: rotate(${pageObj.rotation}deg)">
+                        <span class="absolute top-2 left-2 bg-purple-950/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">Page ${idx + 1}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1">
+                        <div class="flex items-center gap-1">
+                            <button onclick="rotatePdfPage('${pageObj.id}', -90)" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs" title="বাম দিকে ঘুরান">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                            <button onclick="rotatePdfPage('${pageObj.id}', 90)" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs" title="ডান দিকে ঘুরান">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </button>
+                            <button onclick="openAnnotationModal('${pageObj.id}')" class="p-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-xs font-bold flex items-center gap-1" title="পেন দিয়ে আঁকুন / সই করুন">
+                                <i class="fa-solid fa-pen-nib"></i> পেন
+                            </button>
+                        </div>
+
+                        <button onclick="deletePdfPage('${pageObj.id}')" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs" title="পেজ বাদ দিন">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function rotatePdfPage(id, angle) {
+            const page = pdfEditorPages.find(p => p.id === id);
+            if (page) {
+                page.rotation = (page.rotation + angle) % 360;
+                renderPdfEditorPages();
+            }
+        }
+
+        function deletePdfPage(id) {
+            pdfEditorPages = pdfEditorPages.filter(p => p.id !== id);
+            renderPdfEditorPages();
+            showToast('পেজ মুছে ফেলা হয়েছে', 'info');
+        }
+
+        // Open Annotation Canvas Modal
+        function openAnnotationModal(pageId) {
+            currentAnnotatingPageIndex = pageId;
+            const pageObj = pdfEditorPages.find(p => p.id === pageId);
+            if (!pageObj) return;
+
+            const img = new Image();
+            img.onload = () => {
+                annotCanvas.width = img.width;
+                annotCanvas.height = img.height;
+                annotCtx.drawImage(img, 0, 0);
+
+                document.getElementById('annotation-modal').classList.remove('hidden');
+            };
+            img.src = pageObj.canvasDataUrl;
+        }
+
+        function closeAnnotationModal() {
+            document.getElementById('annotation-modal').classList.add('hidden');
+            currentAnnotatingPageIndex = null;
+        }
+
+        function setupAnnotationCanvasListeners() {
+            const getPos = (e) => {
+                const rect = annotCanvas.getBoundingClientRect();
+                const scaleX = annotCanvas.width / rect.width;
+                const scaleY = annotCanvas.height / rect.height;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: (clientX - rect.left) * scaleX,
+                    y: (clientY - rect.top) * scaleY
+                };
+            };
+
+            const startDraw = (e) => {
+                isDrawing = true;
+                const pos = getPos(e);
+                lastX = pos.x;
+                lastY = pos.y;
+            };
+
+            const doDraw = (e) => {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const pos = getPos(e);
+
+                annotCtx.beginPath();
+                annotCtx.moveTo(lastX, lastY);
+                annotCtx.lineTo(pos.x, pos.y);
+                annotCtx.strokeStyle = document.getElementById('pen-color').value;
+                annotCtx.lineWidth = document.getElementById('pen-size').value;
+                annotCtx.lineCap = 'round';
+                annotCtx.lineJoin = 'round';
+                annotCtx.stroke();
+
+                lastX = pos.x;
+                lastY = pos.y;
+            };
+
+            const stopDraw = () => isDrawing = false;
+
+            annotCanvas.addEventListener('mousedown', startDraw);
+            annotCanvas.addEventListener('mousemove', doDraw);
+            annotCanvas.addEventListener('mouseup', stopDraw);
+            annotCanvas.addEventListener('mouseleave', stopDraw);
+
+            annotCanvas.addEventListener('touchstart', startDraw);
+            annotCanvas.addEventListener('touchmove', doDraw);
+            annotCanvas.addEventListener('touchend', stopDraw);
+        }
+
+        function clearAnnotationCanvas() {
+            if (!currentAnnotatingPageIndex) return;
+            openAnnotationModal(currentAnnotatingPageIndex);
+        }
+
+        function applyAnnotationToPage() {
+            if (!currentAnnotatingPageIndex) return;
+            const pageObj = pdfEditorPages.find(p => p.id === currentAnnotatingPageIndex);
+            if (pageObj) {
+                pageObj.canvasDataUrl = annotCanvas.toDataURL('image/png');
+                renderPdfEditorPages();
+                closeAnnotationModal();
+                showToast('আঁকা/স্বাক্ষর পেজে যুক্ত হয়েছে!', 'success');
+            }
+        }
+
+        // Save PDF with Rotations & Canvas Drawing Overlays
+        async function saveEditedPdfDocument() {
+            if (pdfEditorPages.length === 0) return;
+            showProgress(true, 'নতুন PDF তৈরি করা হচ্ছে...', 30);
+
+            try {
+                const newPdf = await PDFLib.PDFDocument.create();
+
+                for (let i = 0; i < pdfEditorPages.length; i++) {
+                    const pageObj = pdfEditorPages[i];
+                    const pct = Math.round(((i + 1) / pdfEditorPages.length) * 100);
+                    showProgress(true, `পেজ যুক্ত হচ্ছে (${i + 1}/${pdfEditorPages.length})...`, pct);
+
+                    // Convert current edited canvas data URL to image embed in PDF
+                    const imgBytes = await fetch(pageObj.canvasDataUrl).then(res => res.arrayBuffer());
+                    const embeddedImg = await newPdf.embedPng(imgBytes);
+
+                    const page = newPdf.addPage([embeddedImg.width, embeddedImg.height]);
+                    page.drawImage(embeddedImg, {
+                        x: 0,
+                        y: 0,
+                        width: embeddedImg.width,
+                        height: embeddedImg.height
+                    });
+
+                    if (pageObj.rotation !== 0) {
+                        page.setRotation(PDFLib.degrees(pageObj.rotation));
+                    }
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                saveAs(blob, 'DocTransform-Edited.pdf');
+
+                showProgress(false);
+                showToast('এডিটেড PDF ডাউনলোডের জন্য প্রস্তুত!', 'success');
+
+            } catch (err) {
+                console.error("PDF Save Error:", err);
+                showProgress(false);
+                showToast('PDF সেভ করতে সমস্যা হয়েছে', 'error');
+            }
+        }
+
+        // ==========================================
+        // 4. IMAGE TO TEXT (OCR) LOGIC
+        // ==========================================
+        async function processImageToText(file) {
+            ocrTargetFile = file;
+            const imgPreview = document.getElementById('ocr-image-preview');
+            const placeholder = document.getElementById('ocr-placeholder');
+            const textArea = document.getElementById('ocr-result-text');
+
+            imgPreview.src = URL.createObjectURL(file);
+            imgPreview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            textArea.value = "";
+
+            const selectedLang = document.getElementById('ocr-lang').value;
+            showProgress(true, 'OCR ইঞ্জিন চালু হচ্ছে...', 10);
+
+            try {
+                const worker = await Tesseract.createWorker(selectedLang, 1, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const pct = Math.round(m.progress * 100);
+                            showProgress(true, `লেখা নিষ্কাশন হচ্ছে... ${pct}%`, pct);
+                        }
+                    }
+                });
+
+                const ret = await worker.recognize(file);
+                textArea.value = ret.data.text;
+                await worker.terminate();
+
+                showProgress(false);
+                showToast('লেখা সফলভাবে বের করা হয়েছে!', 'success');
+            } catch (err) {
+                console.error(err);
+                showProgress(false);
+                showToast('OCR প্রসেস করতে ব্যর্থ হয়েছে', 'error');
+            }
+        }
+
+        document.getElementById('ocr-lang').addEventListener('change', () => {
+            if (ocrTargetFile) processImageToText(ocrTargetFile);
+        });
+
+        function copyOcrText() {
+            const text = document.getElementById('ocr-result-text').value;
+            if (!text) {
+                showToast('কপি করার মতো লেখা নেই', 'error');
+                return;
+            }
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+            showToast('লেখা ক্লিপবোর্ডে কপি হয়েছে!', 'success');
+        }
+
+        function downloadOcrText() {
+            const text = document.getElementById('ocr-result-text').value;
+            if (!text) {
+                showToast('ডাউনলোড করার মতো লেখা নেই', 'error');
+                return;
+            }
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            saveAs(blob, 'DocTransform-Text.txt');
+            showToast('TXT ফাইল ডাউনলোড হয়েছে!', 'success');
+        }
+
+        // ==========================================
+        // UI & UTILITY HELPERS
+        // ==========================================
+        function zoomImage(url) {
+            document.getElementById('zoom-image').src = url;
+            document.getElementById('zoom-modal').classList.remove('hidden');
+        }
+
+        function closeZoomModal() {
+            document.getElementById('zoom-modal').classList.add('hidden');
+        }
+
+        function showProgress(show, message = '', percent = 0) {
+            const container = document.getElementById('progress-container');
+            const status = document.getElementById('progress-status');
+            const percentLabel = document.getElementById('progress-percent');
+            const bar = document.getElementById('progress-bar');
+
+            if (show) {
+                container.classList.remove('hidden');
+                status.textContent = message;
+                percentLabel.textContent = `${percent}%`;
+                bar.style.width = `${percent}%`;
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200', 'bg-red-50', 'text-red-700', 'border-red-200', 'bg-blue-50', 'text-blue-700', 'border-blue-200');
+
+            if (type === 'success') {
+                toast.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-200');
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+            } else {
+                toast.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+            }
+
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function getImageProperties(dataUrl) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve({ width: img.width, height: img.height });
+                img.src = dataUrl;
+            });
+        }
+    </script>
+</body>
+</html>
